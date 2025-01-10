@@ -1,0 +1,21 @@
+REPORT
+
+Motivation: Why you are working on this project?
+It is interesting to see how our data looks ina coded form and to learn coding it. This is useful in many spheres of life, from marketing to coding. Moreover it gives us a great insight about ourselves and our online consumpsion.
+
+• Data source: Where did you get this data? How did you
+collect it?
+I installed the data from youtube into my drive and then added it to google collab. I also used youtube api and together with the two i obtained the data for the graphs.
+
+• Data analysis: Techniques used, dierent stages of the
+analysis.
+Graphs for visual representation.
+
+• Findings: What you learned about yourself?
+I use youtube a lot!
+
+• Limitations and future work: What could be done better?
+I wish youtube gave exact start and end watch times for the videos but unfortunately that data is not acccessible.
+
+Do you have any future plans about your project?
+It would be nice to try this with other apps as well.
