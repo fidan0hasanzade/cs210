@@ -1,0 +1,185 @@
+#from google.colab import files
+pathtodata= "/content/drive/MyDrive/Takeout/Takeout/YouTube and YouTube Music/history/watch-history.json"
+
+#uploaded = files.upload() # Uploading the file from computer
+
+import json
+from collections import defaultdict
+
+# Loading watch history file.
+with open(pathtodata, 'r', encoding='utf-8') as file:
+    watch_history = json.load(file)
+
+# Extracting URLs & timestamps.
+watch_data = []
+for entry in watch_history:
+    if 'titleUrl' in entry and 'time' in entry:
+        video_url = entry['titleUrl']
+        timestamp = entry['time']
+        watch_data.append({'video_url': video_url, 'timestamp': timestamp})
+
+print(f"Found {len(watch_data)} entries.")
+
+!pip install google-api-python-client  # library
+from googleapiclient.discovery import build
+!pip install isodate #?
+import isodate  # To convert to a format
+
+api_key = "AIzaSyBf5r9bBO0x-qp1f8KsejhGmiH2r95-MgU"
+youtube = build('youtube', 'v3', developerKey=api_key)
+
+#---------------------------------------------------------------------------------------------------
+# Function for video duration
+def get_video_duration(video_ids):
+    request = youtube.videos().list(
+        part="contentDetails",
+        id=','.join(video_ids)
+    )
+    response = request.execute()
+    return response['items']
+
+# Video IDs
+video_ids = [video_url.split('=')[-1] for video_url in [entry['video_url'] for entry in watch_data]]
+
+# In batches of 50
+video_details = []
+for i in range(0, len(video_ids), 50):
+    batch_ids = video_ids[i:i+50]
+    details = get_video_duration(batch_ids)
+    video_details.extend(details)
+
+print(f"Fetched details for {len(video_details)} videos.")
+#---------------------------------------------------------------------------------------------------
+
+# Screentime per day.
+daily_screentime = defaultdict(int)
+
+# Loop for each video & its details:
+for video, entry in zip(video_details, watch_data):
+    # Extract duration and convert it to seconds
+    duration = video['contentDetails']['duration']
+    video_seconds = isodate.parse_duration(duration).total_seconds()
+
+    # Geting date from timestamp
+    date = entry['timestamp'].split('T')[0]  # Extracting date
+    
+    # Adding video's duration to total time for that day
+    daily_screentime[date] += video_seconds
+
+print(f"Calculated screentime for {len(daily_screentime)} days.")
+#-----------------------------------------------------------------------------------------------------
+
+# Convert seconds to hours
+daily_screentime_hours = {date: total_seconds / 3600 for date, total_seconds in daily_screentime.items()}
+
+# Print daily screentime (in hours)
+for date, hours in daily_screentime_hours.items():
+    print(f"{date}: {hours:.2f} hours")
+
+
+!pip install matplotlib
+import matplotlib.pyplot as plt
+
+# Sort by date and plot
+sorted_dates = sorted(daily_screentime_hours.keys())
+hours_values = [daily_screentime_hours[date] for date in sorted_dates]
+
+plt.figure(figsize=(10, 6))
+plt.plot(sorted_dates, hours_values, marker='o')
+#plt.xticks(rotation=90)
+plt.xlabel("Date")
+plt.ylabel("Total Hours Watched")
+plt.title("Daily YouTube Screentime Over the Past 3.5 Months")
+plt.show()
+plt.close()
+
+
+import json 
+from collections import defaultdict
+import matplotlib.pyplot as plt
+
+pathtodata = "/content/drive/MyDrive/Takeout/Takeout/YouTube and YouTube Music/history/watch-history.json" 
+
+# Loading watch history file.
+with open(pathtodata, 'r', encoding='utf-8') as file:
+    watch_history = json.load(file)
+
+# Extracting URLs & timestamps.
+watch_data = []
+for entry in watch_history:
+    if 'titleUrl' in entry and 'time' in entry:
+        video_url = entry['titleUrl']
+        timestamp = entry['time']
+        watch_data.append({'video_url': video_url, 'timestamp': timestamp}) 
+
+daily_video_count = defaultdict(int)
+
+# Counting the videos per day
+for entry in watch_data:
+    date = entry['timestamp'].split('T')[0]  # Extracting date
+    daily_video_count[date] += 1
+
+# Sorting the dates
+sorted_dates = sorted(daily_video_count.keys())
+video_counts = [daily_video_count[date] for date in sorted_dates]
+
+# Plotting the number of videos watched each day
+plt.figure(figsize=(10, 6))
+plt.plot(sorted_dates, video_counts, marker='o')
+#plt.xticks(rotation=90)
+plt.xlabel("Date")
+plt.ylabel("Number of Videos Watched")
+plt.title("Number of YouTube Videos Watched Per Day")
+plt.tight_layout() 
+plt.show()
+plt.close()
+
+
+
+
+
+
+
+
+
+#################################################
+
+''' #EDIT LATER:
+# The exam dates 
+exam_dates = ["2025-01-02", "2025-01-04", "2025-01-07"]  
+
+# Two plots
+exam_indices_hours = [sorted_dates.index(date) for date in exam_dates if date in sorted_dates]
+exam_indices_videos = [sorted_dates.index(date) for date in exam_dates if date in sorted_dates]
+
+# First graph (Daily YouTube screentime in hours)
+plt.figure(figsize=(10, 6))
+plt.plot(sorted_dates, hours_values, marker='o', label="Screentime")
+plt.scatter(
+    [sorted_dates[i] for i in exam_indices_hours],
+    [hours_values[i] for i in exam_indices_hours],
+    color='red', label='Exam Days', zorder=5
+)
+plt.xlabel("Date")
+plt.ylabel("Total Hours Watched")
+plt.title("Daily YouTube Screentime Over the Past 3.5 Months")
+plt.legend()
+plt.tight_layout()
+plt.show()
+plt.close()
+
+# Second graph (Number of YouTube videos watched)
+plt.figure(figsize=(10, 6))
+plt.plot(sorted_dates, video_counts, marker='o', label="Videos Watched")
+plt.scatter(
+    [sorted_dates[i] for i in exam_indices_videos],
+    [video_counts[i] for i in exam_indices_videos],
+    color='red', label='Exam Days', zorder=5
+)
+plt.xlabel("Date")
+plt.ylabel("Number of Videos Watched")
+plt.title("Number of YouTube Videos Watched Per Day")
+plt.legend()
+plt.tight_layout()
+plt.show()
+plt.close()
